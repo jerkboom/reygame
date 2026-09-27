@@ -1,0 +1,174 @@
+{
+  "entities": {
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "Store configuration, exchange rate, and contact settings.",
+      "type": "object",
+      "properties": {
+        "storeName": { "type": "string", "maxLength": 100 },
+        "supportWhatsApp": { "type": "string", "maxLength": 40 },
+        "supportEmail": { "type": "string", "maxLength": 100 },
+        "announcement": { "type": "string", "maxLength": 300 },
+        "deliveryMessage": { "type": "string", "maxLength": 500 },
+        "exchangeRateUSDToGHS": { "type": "number" },
+        "exchangeRateLastUpdated": { "type": "string", "format": "date-time" },
+        "exchangeRateUpdatedBy": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["storeName", "supportWhatsApp", "supportEmail", "exchangeRateUSDToGHS"]
+    },
+    "Game": {
+      "title": "Game",
+      "description": "PlayStation game catalog item with prices and console availability.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "maxLength": 150 },
+        "slug": { "type": "string", "maxLength": 150 },
+        "coverImage": { "type": "string", "maxLength": 500 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "genre": { "type": "string", "maxLength": 50 },
+        "ps4Available": { "type": "boolean" },
+        "ps5Available": { "type": "boolean" },
+        "isActive": { "type": "boolean" },
+        "isFeatured": { "type": "boolean" },
+        "sortOrder": { "type": "number" }
+      },
+      "required": ["title", "slug", "coverImage", "ps4Available", "ps5Available", "isActive"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer digital purchase order with snapshot product and pricing records.",
+      "type": "object",
+      "properties": {
+        "orderNumber": { "type": "string", "maxLength": 50 },
+        "secureToken": { "type": "string", "maxLength": 64 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "customerGoogleUid": { "type": "string", "maxLength": 128 },
+        "customerType": { "type": "string", "enum": ["GOOGLE", "GUEST"] },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "customerEmail": { "type": "string", "maxLength": 150 },
+        "customerPhone": { "type": "string", "maxLength": 50 },
+        "gameId": { "type": "string", "maxLength": 100 },
+        "gameTitleSnapshot": { "type": "string", "maxLength": 150 },
+        "console": { "type": "string", "enum": ["PS4", "PS5"] },
+        "accountTypeId": { "type": "string", "maxLength": 50 },
+        "priceUSD": { "type": "number" },
+        "exchangeRate": { "type": "number" },
+        "amountGHS": { "type": "number" },
+        "currency": { "type": "string", "enum": ["GHS"] },
+        "paystackReference": { "type": "string", "maxLength": 100 },
+        "paymentStatus": { "type": "string", "enum": ["PENDING_PAYMENT", "PAID", "PAYMENT_FAILED"] },
+        "orderStatus": { "type": "string", "enum": ["PENDING_PAYMENT", "PAID", "AWAITING_FULFILLMENT", "PROCESSING", "FULFILLED", "CANCELLED", "REFUNDED"] }
+      },
+      "required": ["orderNumber", "customerName", "customerEmail", "customerPhone", "gameId", "priceUSD", "exchangeRate", "amountGHS", "paystackReference", "paymentStatus", "orderStatus"]
+    },
+    "AccountType": {
+      "title": "AccountType",
+      "description": "Account licensing option such as Primary Shared, Primary Non-Sharing, Secondary, or Full Private.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 50 },
+        "name": { "type": "string", "maxLength": 100 },
+        "badge": { "type": "string", "maxLength": 50 },
+        "defaultPriceUSD": { "type": "number" },
+        "description": { "type": "string", "maxLength": 500 },
+        "setupInstructions": { "type": "string", "maxLength": 2000 },
+        "isActive": { "type": "boolean" },
+        "canChangeCredentials": { "type": "boolean" },
+        "sortOrder": { "type": "number" }
+      },
+      "required": ["id", "name", "badge", "defaultPriceUSD", "description", "isActive"]
+    },
+    "FAQ": {
+      "title": "FAQ",
+      "description": "Store frequently asked questions and answers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 50 },
+        "question": { "type": "string", "maxLength": 300 },
+        "answer": { "type": "string", "maxLength": 3000 },
+        "category": { "type": "string", "enum": ["general", "accounts", "payment", "warranty"] },
+        "sortOrder": { "type": "number" },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["id", "question", "answer", "category", "isActive"]
+    },
+    "InventoryItem": {
+      "title": "InventoryItem",
+      "description": "Available PlayStation account credentials for order fulfillment.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 50 },
+        "gameId": { "type": "string", "maxLength": 100 },
+        "console": { "type": "string", "enum": ["PS4", "PS5"] },
+        "accountTypeId": { "type": "string", "maxLength": 50 },
+        "accountEmail": { "type": "string", "maxLength": 150 },
+        "accountPassword": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["available", "reserved", "assigned", "delivered"] },
+        "assignedOrderId": { "type": "string", "maxLength": 100 }
+      },
+      "required": ["id", "gameId", "console", "accountTypeId", "accountEmail", "accountPassword", "status"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Administrative actions and security records.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 50 },
+        "adminUser": { "type": "string", "maxLength": 100 },
+        "action": { "type": "string", "maxLength": 100 },
+        "details": { "type": "string", "maxLength": 1000 },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "adminUser", "action", "details", "timestamp"]
+    },
+    "AdminNotification": {
+      "title": "AdminNotification",
+      "description": "Alerts for new orders and inventory thresholds.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 50 },
+        "type": { "type": "string", "enum": ["NEW_ORDER", "PAYMENT_SUCCESS", "ORDER_FULFILLED", "LOW_INVENTORY"] },
+        "title": { "type": "string", "maxLength": 150 },
+        "message": { "type": "string", "maxLength": 500 },
+        "orderId": { "type": "string", "maxLength": 100 },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "type", "title", "message", "read", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/siteSettings/{settingId}": {
+      "schema": "SiteSettings",
+      "description": "Global store settings and USD/GHS exchange rates"
+    },
+    "/games/{gameId}": {
+      "schema": "Game",
+      "description": "PlayStation game catalog"
+    },
+    "/accountTypes/{typeId}": {
+      "schema": "AccountType",
+      "description": "PlayStation account options and tier definitions"
+    },
+    "/faqs/{faqId}": {
+      "schema": "FAQ",
+      "description": "Frequently asked questions"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Store customer orders and fulfillment details"
+    },
+    "/inventory/{invId}": {
+      "schema": "InventoryItem",
+      "description": "Account inventory pools for game fulfillment"
+    },
+    "/auditLogs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Audit trail of admin operations"
+    },
+    "/notifications/{notifId}": {
+      "schema": "AdminNotification",
+      "description": "Store alerts and notifications for admin"
+    }
+  }
+}

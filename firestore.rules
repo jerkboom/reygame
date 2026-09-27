@@ -1,0 +1,177 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all unmatched paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'oforir74444@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidSiteSettings(data) {
+      return data.keys().hasAll(['storeName', 'supportWhatsApp', 'supportEmail', 'exchangeRateUSDToGHS']) &&
+        data.storeName is string && data.storeName.size() <= 100 &&
+        data.supportWhatsApp is string && data.supportWhatsApp.size() <= 40 &&
+        data.supportEmail is string && data.supportEmail.size() <= 100 &&
+        data.exchangeRateUSDToGHS is number && data.exchangeRateUSDToGHS > 0;
+    }
+
+    function isValidGame(data) {
+      return data.keys().hasAll(['title', 'slug', 'coverImage', 'ps4Available', 'ps5Available', 'isActive']) &&
+        data.title is string && data.title.size() <= 150 &&
+        data.slug is string && data.slug.size() <= 150 &&
+        data.coverImage is string && data.coverImage.size() <= 1000 &&
+        data.ps4Available is bool &&
+        data.ps5Available is bool &&
+        data.isActive is bool;
+    }
+
+    function isValidAccountType(data) {
+      return data.keys().hasAll(['id', 'name', 'badge', 'defaultPriceUSD', 'description', 'isActive']) &&
+        data.id is string && data.id.size() <= 50 &&
+        data.name is string && data.name.size() <= 100 &&
+        data.badge is string && data.badge.size() <= 50 &&
+        data.defaultPriceUSD is number &&
+        data.description is string && data.description.size() <= 1000 &&
+        data.isActive is bool;
+    }
+
+    function isValidFAQ(data) {
+      return data.keys().hasAll(['id', 'question', 'answer', 'category', 'isActive']) &&
+        data.id is string && data.id.size() <= 50 &&
+        data.question is string && data.question.size() <= 300 &&
+        data.answer is string && data.answer.size() <= 5000 &&
+        data.category is string &&
+        data.isActive is bool;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll([
+        'orderNumber', 'customerName', 'customerEmail', 'customerPhone',
+        'gameId', 'priceUSD', 'exchangeRate', 'amountGHS', 'paymentStatus', 'orderStatus'
+      ]) &&
+      data.orderNumber is string && data.orderNumber.size() <= 50 &&
+      data.customerName is string && data.customerName.size() <= 100 &&
+      data.customerEmail is string && data.customerEmail.size() <= 150 &&
+      data.customerPhone is string && data.customerPhone.size() <= 50 &&
+      data.gameId is string && data.gameId.size() <= 100 &&
+      data.priceUSD is number && data.priceUSD >= 0 &&
+      data.exchangeRate is number && data.exchangeRate > 0 &&
+      data.amountGHS is number && data.amountGHS >= 0 &&
+      data.paymentStatus in ['PENDING_PAYMENT', 'PAID', 'PAYMENT_FAILED'] &&
+      data.orderStatus in ['PENDING_PAYMENT', 'PAID', 'AWAITING_FULFILLMENT', 'PROCESSING', 'FULFILLED', 'CANCELLED', 'REFUNDED'];
+    }
+
+    function isValidInventoryItem(data) {
+      return data.keys().hasAll(['id', 'gameId', 'console', 'accountTypeId', 'accountEmail', 'accountPassword', 'status']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.gameId is string && data.gameId.size() <= 100 &&
+        data.console in ['PS4', 'PS5'] &&
+        data.accountTypeId is string && data.accountTypeId.size() <= 50 &&
+        data.accountEmail is string && data.accountEmail.size() <= 150 &&
+        data.accountPassword is string && data.accountPassword.size() <= 100 &&
+        data.status in ['available', 'reserved', 'assigned', 'delivered'];
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll(['id', 'adminUser', 'action', 'details', 'timestamp']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.adminUser is string && data.adminUser.size() <= 100 &&
+        data.action is string && data.action.size() <= 100 &&
+        data.details is string && data.details.size() <= 2000 &&
+        data.timestamp is string && data.timestamp.size() <= 60;
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['id', 'type', 'title', 'message', 'read', 'createdAt']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.type in ['NEW_ORDER', 'PAYMENT_SUCCESS', 'ORDER_FULFILLED', 'LOW_INVENTORY'] &&
+        data.title is string && data.title.size() <= 150 &&
+        data.message is string && data.message.size() <= 500 &&
+        data.read is bool &&
+        data.createdAt is string && data.createdAt.size() <= 60;
+    }
+
+    // Site Settings: Publicly readable, admin and server writable with schema validation
+    match /siteSettings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin() || isValidSiteSettings(incoming());
+    }
+
+    // Games: Publicly readable catalog, admin and server writable with schema validation
+    match /games/{gameId} {
+      allow read: if true;
+      allow write: if isAdmin() || isValidGame(incoming());
+    }
+
+    // Account Types: Publicly readable, admin and server writable with schema validation
+    match /accountTypes/{typeId} {
+      allow read: if true;
+      allow write: if isAdmin() || isValidAccountType(incoming());
+    }
+
+    // FAQs: Publicly readable, admin and server writable with schema validation
+    match /faqs/{faqId} {
+      allow read: if true;
+      allow write: if isAdmin() || isValidFAQ(incoming());
+    }
+
+    // Orders: Readable, admin and server writable with schema validation
+    match /orders/{orderId} {
+      allow read: if true;
+      allow write: if isAdmin() || isValidOrder(incoming());
+    }
+
+    // Inventory: Account pool credentials, admin and server writable with schema validation
+    match /inventory/{invId} {
+      allow read: if true;
+      allow write: if isAdmin() || isValidInventoryItem(incoming());
+    }
+
+    // Audit Logs: System activity audit trail, admin and server writable with schema validation
+    match /auditLogs/{logId} {
+      allow read: if true;
+      allow write: if isAdmin() || isValidAuditLog(incoming());
+    }
+
+    // Notifications: Order alerts and system notifications, admin and server writable with schema validation
+    match /notifications/{notifId} {
+      allow read: if true;
+      allow write: if isAdmin() || isValidNotification(incoming());
+    }
+
+    // Admins: Access control list
+    match /admins/{adminId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // First Purchase Redemptions: Tracks one-time promotion discount redemptions
+    match /firstPurchaseRedemptions/{uid} {
+      allow read, write: if true;
+    }
+  }
+}

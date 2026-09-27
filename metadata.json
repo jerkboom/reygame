@@ -1,0 +1,6 @@
+{
+  "name": "ReyGames - PlayStation Digital Game Store",
+  "description": "Ghana-focused PlayStation digital gaming storefront featuring USD catalog pricing with GHS Paystack checkout, secure order fulfillment tracking, and full admin dashboard control.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
