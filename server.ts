@@ -78,7 +78,15 @@ dotenv.config();
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+
+  // Parse command line port if provided (e.g. --port 3000 or -p 3000)
+  let cliPort: number | null = null;
+  const portArgIndex = process.argv.findIndex((arg) => arg === '--port' || arg === '-p');
+  if (portArgIndex !== -1 && process.argv[portArgIndex + 1]) {
+    const parsed = Number(process.argv[portArgIndex + 1]);
+    if (!isNaN(parsed) && parsed > 0) cliPort = parsed;
+  }
+  const PORT = cliPort || Number(process.env.PORT) || 3000;
 
   // Enable trust proxy for accurate host and proto detection behind reverse proxies
   app.set('trust proxy', true);
@@ -1700,8 +1708,10 @@ async function startServer() {
   });
 
   // ----------------- Vite & Static Asset Handling -----------------
+  const isCjsBundle = typeof __filename !== 'undefined' && __filename.endsWith('.cjs');
+  const isProduction = process.env.NODE_ENV === 'production' || isCjsBundle;
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (!isProduction) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
